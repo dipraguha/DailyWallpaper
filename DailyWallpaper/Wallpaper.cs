@@ -31,7 +31,7 @@ namespace DailyWallpaper
         {
             try
             {
-                using (var client = new HttpClient())
+                using (var client = Utility.GetHttpClient())
                 {
                     using (var response = client.GetAsync(url).Result)
                     {

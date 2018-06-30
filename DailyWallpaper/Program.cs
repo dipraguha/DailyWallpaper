@@ -17,6 +17,9 @@ namespace DailyWallpaper
                 case "BING":
                     url = ImageSource.GetBingImageUrl();
                     break;
+                case "UNSPLASH":
+                    url = ImageSource.GetUnsplashRandomPhotoDownloadUrl();
+                    break;
             }
             if (!string.IsNullOrEmpty(url) && Uri.IsWellFormedUriString(url, UriKind.Absolute))
             {
