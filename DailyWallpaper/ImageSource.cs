@@ -4,12 +4,13 @@ using System;
 using System.Configuration;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace DailyWallpaper
 {
     public class ImageSource
     {
-        public static string GetNasaApodImageUrl()
+        public async static Task<string> GetNasaApodImageUrlAsync()
         {
             string apiKey = ConfigurationManager.AppSettings["NasaApiKey"].ToString();
             string url = string.Format(Utility.GetUrl(), apiKey);
@@ -20,11 +21,11 @@ namespace DailyWallpaper
                 {
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
-                    using (var response = client.GetAsync(url).Result)
+                    using (var response = await client.GetAsync(url))
                     {
                         if (response.IsSuccessStatusCode)
                         {
-                            var data = response.Content.ReadAsAsync<NasaApod>().Result;
+                            var data = await response.Content.ReadAsAsync<NasaApod>();
                             if (data.MediaType != "image")
                             {
                                 EventLogger.LogEvent("NASA APOD API call did not return an image.");
@@ -48,7 +49,7 @@ namespace DailyWallpaper
 
         }
 
-        public static string GetBingImageUrl()
+        public async static Task<string> GetBingImageUrlAsync()
         {
             var url = Utility.GetUrl();            
 
@@ -58,11 +59,11 @@ namespace DailyWallpaper
                 {
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
-                    using (var response = client.GetAsync(url).Result)
+                    using (var response = await client.GetAsync(url))
                     {
                         if(response.IsSuccessStatusCode)
                         {
-                            var data = response.Content.ReadAsStringAsync().Result;
+                            var data = await response.Content.ReadAsStringAsync();
                             var urlPart = Convert.ToString(JsonConvert.DeserializeObject<dynamic>(data).images[0].url);
                             if (!Uri.IsWellFormedUriString(urlPart, UriKind.Relative))
                             {
@@ -86,7 +87,7 @@ namespace DailyWallpaper
             }            
         }
 
-        public static string GetUnsplashRandomPhotoDownloadUrl()
+        public async static Task<string> GetUnsplashRandomPhotoDownloadUrlAsync()
         {            
             var appKey = ConfigurationManager.AppSettings["UnsplashAppKey"].ToString();
             var url = string.Format(Utility.GetUrl(), appKey);
@@ -97,11 +98,11 @@ namespace DailyWallpaper
                 {
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
-                    using (var response = client.GetAsync(url).Result)
+                    using (var response = await client.GetAsync(url))
                     {
                         if(response.IsSuccessStatusCode)
                         {
-                            var data = response.Content.ReadAsStringAsync().Result;                            
+                            var data = await response.Content.ReadAsStringAsync();                            
                             var downloadImageUrl = Convert.ToString(JsonConvert.DeserializeObject<dynamic>(data).urls.full);
                             var downloadCounterUrl = Convert.ToString(JsonConvert.DeserializeObject<dynamic>(data).links.download_location);
                             if (!Uri.IsWellFormedUriString(downloadImageUrl, UriKind.Absolute))
@@ -111,7 +112,7 @@ namespace DailyWallpaper
                             }
 
                             //API requirement: trigger download endpoint if setting the image as wallpaper etc.
-                            TriggerUnsplashImageDownloadCounterEndpoint(downloadCounterUrl, appKey);
+                            await TriggerUnsplashImageDownloadCounterEndpointAsync(downloadCounterUrl, appKey);
 
                             return string.Format(Utility.PrepareImageDownloadUrl(downloadImageUrl), appKey);
                         }
@@ -130,7 +131,7 @@ namespace DailyWallpaper
             }
         }
 
-        private static void TriggerUnsplashImageDownloadCounterEndpoint(string url, string appKey)
+        private async static void TriggerUnsplashImageDownloadCounterEndpointAsync(string url, string appKey)
         {
             try
             {
@@ -139,7 +140,7 @@ namespace DailyWallpaper
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
                     var downloadEndpointUrl = url + "?client_id=" + appKey;
-                    using (var response = client.GetAsync(downloadEndpointUrl).Result)
+                    using (var response = await client.GetAsync(downloadEndpointUrl))
                     {
                         if(!response.IsSuccessStatusCode)
                         {

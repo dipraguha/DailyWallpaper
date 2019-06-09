@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace DailyWallpaper
 {
@@ -27,17 +28,17 @@ namespace DailyWallpaper
             Center
         }
 
-        public static void SetWallpaper(Uri url, Style style)
+        public async static Task SetWallpaperAsync(Uri url, Style style)
         {
             try
             {
                 using (var client = Utility.GetHttpClient())
                 {
-                    using (var response = client.GetAsync(url).Result)
+                    using (var response = await client.GetAsync(url))
                     {
                         if (response.IsSuccessStatusCode)
                         {
-                            using (var stream = response.Content.ReadAsStreamAsync().Result)
+                            using (var stream = await response.Content.ReadAsStreamAsync())
                             {
                                 using (var img = Image.FromStream(stream))
                                 {

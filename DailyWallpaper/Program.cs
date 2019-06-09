@@ -1,30 +1,31 @@
 ﻿using System;
 using System.Configuration;
+using System.Threading.Tasks;
 
 namespace DailyWallpaper
 {
     public class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var source = ConfigurationManager.AppSettings["WallpaperSource"].ToString();
             string url = string.Empty;
             switch (source)
             {
                 case "NASA":
-                    url = ImageSource.GetNasaApodImageUrl();
+                    url = await ImageSource.GetNasaApodImageUrlAsync();
                     break;
                 case "BING":
-                    url = ImageSource.GetBingImageUrl();
+                    url = await ImageSource.GetBingImageUrlAsync();
                     break;
                 case "UNSPLASH":
-                    url = ImageSource.GetUnsplashRandomPhotoDownloadUrl();
+                    url = await ImageSource.GetUnsplashRandomPhotoDownloadUrlAsync();
                     break;
             }
             if (!string.IsNullOrEmpty(url) && Uri.IsWellFormedUriString(url, UriKind.Absolute))
             {
                 Uri imageUrl = new Uri(url, UriKind.Absolute);
-                Wallpaper.SetWallpaper(imageUrl, Wallpaper.Style.Fill);
+                await Wallpaper.SetWallpaperAsync(imageUrl, Wallpaper.Style.Fill);
             }
         }
     }
