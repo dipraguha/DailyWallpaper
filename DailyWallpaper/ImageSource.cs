@@ -131,7 +131,7 @@ namespace DailyWallpaper
             }
         }
 
-        private async static void TriggerUnsplashImageDownloadCounterEndpointAsync(string url, string appKey)
+        private async static Task TriggerUnsplashImageDownloadCounterEndpointAsync(string url, string appKey)
         {
             try
             {
