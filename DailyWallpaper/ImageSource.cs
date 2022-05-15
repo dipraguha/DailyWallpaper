@@ -1,7 +1,7 @@
 ﻿using DailyWallpaper.Models;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
-using System.Configuration;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -10,16 +10,16 @@ namespace DailyWallpaper
 {
     public class ImageSource
     {
-        public async static Task<string> GetNasaApodImageUrlAsync()
+        public async static Task<string> GetNasaApodImageUrlAsync(IConfiguration configuration)
         {
-            string apiKey = ConfigurationManager.AppSettings["NasaApiKey"].ToString();
-            string url = string.Format(Utility.GetUrl(), apiKey);
+            string apiKey = configuration.GetSection("NasaApiKey").Value;
+            string url = string.Format(Utility.GetUrl(configuration), apiKey);
 
             try
             {
-                using (var client = Utility.GetHttpClient())
+                using (var client = Utility.GetHttpClient(configuration))
                 {
-                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                    //ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
                     using (var response = await client.GetAsync(url))
                     {
@@ -31,7 +31,7 @@ namespace DailyWallpaper
                                 EventLogger.LogEvent("NASA APOD API call did not return an image.");
                                 return null;
                             }
-                            return Utility.PrepareImageDownloadUrl(data.ImageHdUrl);
+                            return Utility.PrepareImageDownloadUrl(configuration, data.ImageHdUrl);
                         }
                         else
                         {
@@ -49,15 +49,15 @@ namespace DailyWallpaper
 
         }
 
-        public async static Task<string> GetBingImageUrlAsync()
+        public async static Task<string> GetBingImageUrlAsync(IConfiguration configuration)
         {
-            var url = Utility.GetUrl();            
+            var url = Utility.GetUrl(configuration);
 
             try
             {
-                using (var client = Utility.GetHttpClient())
+                using (var client = Utility.GetHttpClient(configuration))
                 {
-                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                    //ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
                     using (var response = await client.GetAsync(url))
                     {
@@ -70,7 +70,7 @@ namespace DailyWallpaper
                                 EventLogger.LogEvent("Failed to retrieve well-formed Bing image URL");
                                 return null;
                             }
-                            return Utility.PrepareImageDownloadUrl(urlPart);
+                            return Utility.PrepareImageDownloadUrl(configuration, urlPart);
                         }
                         else
                         {
@@ -87,16 +87,16 @@ namespace DailyWallpaper
             }            
         }
 
-        public async static Task<string> GetUnsplashRandomPhotoDownloadUrlAsync()
+        public async static Task<string> GetUnsplashRandomPhotoDownloadUrlAsync(IConfiguration configuration)
         {            
-            var appKey = ConfigurationManager.AppSettings["UnsplashAppKey"].ToString();
-            var url = string.Format(Utility.GetUrl(), appKey);
+            var appKey = configuration.GetSection("UnsplashAppKey").Value;
+            var url = string.Format(Utility.GetUrl(configuration), appKey);
 
             try
             {
-                using (var client = Utility.GetHttpClient())
+                using (var client = Utility.GetHttpClient(configuration))
                 {
-                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                    //ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
                     using (var response = await client.GetAsync(url))
                     {
@@ -112,9 +112,9 @@ namespace DailyWallpaper
                             }
 
                             //API requirement: trigger download endpoint if setting the image as wallpaper etc.
-                            await TriggerUnsplashImageDownloadCounterEndpointAsync(downloadCounterUrl, appKey);
+                            await TriggerUnsplashImageDownloadCounterEndpointAsync(configuration, downloadCounterUrl, appKey);
 
-                            return string.Format(Utility.PrepareImageDownloadUrl(downloadImageUrl), appKey);
+                            return string.Format(Utility.PrepareImageDownloadUrl(configuration, downloadImageUrl), appKey);
                         }
                         else
                         {
@@ -131,13 +131,13 @@ namespace DailyWallpaper
             }
         }
 
-        private async static Task TriggerUnsplashImageDownloadCounterEndpointAsync(string url, string appKey)
+        private async static Task TriggerUnsplashImageDownloadCounterEndpointAsync(IConfiguration configuration, string url, string appKey)
         {
             try
             {
-                using (var client = Utility.GetHttpClient())
+                using (var client = Utility.GetHttpClient(configuration))
                 {
-                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                    //ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
                     var downloadEndpointUrl = url + "?client_id=" + appKey;
                     using (var response = await client.GetAsync(downloadEndpointUrl))

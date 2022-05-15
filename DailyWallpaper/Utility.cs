@@ -1,4 +1,4 @@
-﻿using System.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using System.Net.Http;
 using System.Net.Http.Headers;
 
@@ -6,10 +6,10 @@ namespace DailyWallpaper
 {
     public class Utility
     {
-        public static HttpClient GetHttpClient()
+        public static HttpClient GetHttpClient(IConfiguration configuration)
         {
             var client = new HttpClient();
-            var source = ConfigurationManager.AppSettings["WallpaperSource"].ToString();
+            var source = configuration.GetSection("WallpaperSource").Value;
             switch (source)
             {
                 case "NASA":
@@ -25,10 +25,10 @@ namespace DailyWallpaper
             return client;
         }
 
-        public static string GetUrl()
+        public static string GetUrl(IConfiguration configuration)
         {
             var url = "";
-            var source = ConfigurationManager.AppSettings["WallpaperSource"].ToString();
+            var source = configuration.GetSection("WallpaperSource").Value;
             switch (source)
             {
                 case "NASA":
@@ -44,17 +44,17 @@ namespace DailyWallpaper
             return url;
         }
 
-        public static string PrepareImageDownloadUrl(string url)
+        public static string PrepareImageDownloadUrl(IConfiguration configuration, string url)
         {
             var preparedUrl = "";
-            var source = ConfigurationManager.AppSettings["WallpaperSource"].ToString();            
+            var source = configuration.GetSection("WallpaperSource").Value;
             switch (source)
             {
                 case "NASA":
                     preparedUrl = url;
                     break;
                 case "BING":
-                    preparedUrl = ConfigurationManager.AppSettings["BingBaseUrl"].ToString() + url;
+                    preparedUrl = configuration.GetSection("BingBaseUrl").Value + url;
                     break;
                 case "UNSPLASH":
                     preparedUrl = url + "&client_id={0}";
